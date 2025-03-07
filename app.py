@@ -2,10 +2,10 @@ import streamlit as st
 import pickle
 from streamlit_option_menu import option_menu
 
-# Change Name & Logo
+
 st.set_page_config(page_title="Disease Prediction", page_icon="⚕️")
 
-# Hiding Streamlit add-ons
+
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -15,8 +15,8 @@ hide_st_style = """
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
-# Adding Background Image
-background_image_url = "https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/SAKGwKC/medical-background-with-loop_n26ve-_yg_thumbnail-1080_05.png"  # Replace with your image URL
+
+background_image_url = "https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/SAKGwKC/medical-background-with-loop_n26ve-_yg_thumbnail-1080_05.png"
 
 page_bg_img = f"""
 <style>
@@ -41,44 +41,78 @@ background-color: rgba(0, 0, 0, 0.7);
 """
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# Load the saved models
-models = {
-    
-    'lung_cancer': pickle.load(open('Model/lungs_disease_model.sav', 'rb')),
+
+VALID_USERS = {
+    "admin": "password123",
+    "doctor1": "docpass",
+    "user1": "test123"
 }
 
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+def login():
+    """Login function to authenticate users."""
+    st.title("Login Page")
+
+    username = st.text_input("Username", key="username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if username in VALID_USERS and VALID_USERS[username] == password:
+            st.session_state.authenticated = True
+            st.session_state.user = username
+            st.success(f"Welcome, {username}!")
+            st.rerun()  # Refresh the page after login
+        else:
+            st.error("Invalid username or password!")
+
+def main_page():
+    """Main prediction page (after login)."""
+    st.title("Disease Prediction System")
+
+    
+    if st.button("Logout"):
+        st.session_state.authenticated = False
+        st.session_state.user = None
+        st.rerun()
+
+    
+    try:
+        model = pickle.load(open('Model/lungs_disease_model.sav', 'rb'))
+    except FileNotFoundError:
+        st.error("Model file not found! Ensure 'lungs_disease_model.sav' exists.")
+        return
+
+   
+    st.write("Enter details for lung cancer prediction:")
+    GENDER = st.number_input("Gender (1 = Male; 0 = Female)", step=1)
+    AGE = st.number_input("Age", step=1)
+    SMOKING = st.number_input("Smoking (1 = Yes; 0 = No)", step=1)
+    YELLOW_FINGERS = st.number_input("Yellow Fingers (1 = Yes; 0 = No)", step=1)
+    ANXIETY = st.number_input("Anxiety (1 = Yes; 0 = No)", step=1)
+    PEER_PRESSURE = st.number_input("Peer Pressure (1 = Yes; 0 = No)", step=1)
+    CHRONIC_DISEASE = st.number_input("Chronic Disease (1 = Yes; 0 = No)", step=1)
+    FATIGUE = st.number_input("Fatigue (1 = Yes; 0 = No)", step=1)
+    ALLERGY = st.number_input("Allergy (1 = Yes; 0 = No)", step=1)
+    WHEEZING = st.number_input("Wheezing (1 = Yes; 0 = No)", step=1)
+    ALCOHOL_CONSUMING = st.number_input("Alcohol Consuming (1 = Yes; 0 = No)", step=1)
+    COUGHING = st.number_input("Coughing (1 = Yes; 0 = No)", step=1)
+    SHORTNESS_OF_BREATH = st.number_input("Shortness Of Breath (1 = Yes; 0 = No)", step=1)
+    SWALLOWING_DIFFICULTY = st.number_input("Swallowing Difficulty (1 = Yes; 0 = No)", step=1)
+    CHEST_PAIN = st.number_input("Chest Pain (1 = Yes; 0 = No)", step=1)
+
+    if st.button("Predict"):
+        prediction = model.predict([[GENDER, AGE, SMOKING, YELLOW_FINGERS, ANXIETY, PEER_PRESSURE, CHRONIC_DISEASE, FATIGUE, ALLERGY, WHEEZING, ALCOHOL_CONSUMING, COUGHING, SHORTNESS_OF_BREATH, SWALLOWING_DIFFICULTY, CHEST_PAIN]])
+        result = "The person has lung cancer" if prediction[0] == 1 else "The person does not have lung cancer"
+        st.success(result)
 
 
-def display_input(label, tooltip, key, type="text"):
-    if type == "text":
-        return st.text_input(label, key=key, help=tooltip)
-    elif type == "number":
-        return st.number_input(label, key=key, help=tooltip, step=1)
 
-
-# Lung Cancer Prediction Page
-
-st.title("Lung Cancer")
-st.write("Enter the following details to predict lung cancer:")
-
-GENDER = display_input('Gender (1 = Male; 0 = Female)', 'Enter gender of the person', 'GENDER', 'number')
-AGE = display_input('Age', 'Enter age of the person', 'AGE', 'number')
-SMOKING = display_input('Smoking (1 = Yes; 0 = No)', 'Enter if the person smokes', 'SMOKING', 'number')
-YELLOW_FINGERS = display_input('Yellow Fingers (1 = Yes; 0 = No)', 'Enter if the person has yellow fingers', 'YELLOW_FINGERS', 'number')
-ANXIETY = display_input('Anxiety (1 = Yes; 0 = No)', 'Enter if the person has anxiety', 'ANXIETY', 'number')
-PEER_PRESSURE = display_input('Peer Pressure (1 = Yes; 0 = No)', 'Enter if the person is under peer pressure', 'PEER_PRESSURE', 'number')
-CHRONIC_DISEASE = display_input('Chronic Disease (1 = Yes; 0 = No)', 'Enter if the person has a chronic disease', 'CHRONIC_DISEASE', 'number')
-FATIGUE = display_input('Fatigue (1 = Yes; 0 = No)', 'Enter if the person experiences fatigue', 'FATIGUE', 'number')
-ALLERGY = display_input('Allergy (1 = Yes; 0 = No)', 'Enter if the person has allergies', 'ALLERGY', 'number')
-WHEEZING = display_input('Wheezing (1 = Yes; 0 = No)', 'Enter if the person experiences wheezing', 'WHEEZING', 'number')
-ALCOHOL_CONSUMING = display_input('Alcohol Consuming (1 = Yes; 0 = No)', 'Enter if the person consumes alcohol', 'ALCOHOL_CONSUMING', 'number')
-COUGHING = display_input('Coughing (1 = Yes; 0 = No)', 'Enter if the person experiences coughing', 'COUGHING', 'number')
-SHORTNESS_OF_BREATH = display_input('Shortness Of Breath (1 = Yes; 0 = No)', 'Enter if the person experiences shortness of breath', 'SHORTNESS_OF_BREATH', 'number')
-SWALLOWING_DIFFICULTY = display_input('Swallowing Difficulty (1 = Yes; 0 = No)', 'Enter if the person has difficulty swallowing', 'SWALLOWING_DIFFICULTY', 'number')
-CHEST_PAIN = display_input('Chest Pain (1 = Yes; 0 = No)', 'Enter if the person experiences chest pain', 'CHEST_PAIN', 'number')
-
-lungs_diagnosis = ''
-if st.button("Lung Cancer Test Result"):
-    lungs_prediction = models['lung_cancer'].predict([[GENDER, AGE, SMOKING, YELLOW_FINGERS, ANXIETY, PEER_PRESSURE, CHRONIC_DISEASE, FATIGUE, ALLERGY, WHEEZING, ALCOHOL_CONSUMING, COUGHING, SHORTNESS_OF_BREATH, SWALLOWING_DIFFICULTY, CHEST_PAIN]])
-    lungs_diagnosis = "The person has lung cancer disease" if lungs_prediction[0] == 1 else "The person does not have lung cancer disease"
-    st.success(lungs_diagnosis)
+if st.session_state.authenticated:
+    main_page()
+else:
+    login()
