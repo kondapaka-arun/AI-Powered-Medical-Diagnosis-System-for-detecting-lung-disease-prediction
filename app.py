@@ -72,7 +72,7 @@ def login():
 
 def main_page():
     """Main prediction page (after login)."""
-    st.title("Disease Prediction System")
+    st.title("Lung Disease Prediction System")
 
     
     if st.button("Logout"):
